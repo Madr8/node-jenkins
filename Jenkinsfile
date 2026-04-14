@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        NEXUS_URL = 'http://host.docker.internal:8081/repository/maven-releases/'
-    }
-
     stages {
         stage('Checkout Source Code') {
             steps {
@@ -27,12 +23,18 @@ pipeline {
             }
         }
 
+        stage('Archive Artifacts') {
+            steps {
+                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+            }
+        }
+
         stage('Deploy to Nexus') {
-    steps {
-        withCredentials([usernamePassword(credentialsId: 'nexus-creds', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
-            sh '''
-            mkdir -p ~/.m2
-            cat > ~/.m2/settings.xml <<EOF
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'nexus-creds', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                    sh '''
+                    mkdir -p ~/.m2
+                    cat > ~/.m2/settings.xml <<EOF
 <settings>
   <servers>
     <server>
@@ -44,15 +46,10 @@ pipeline {
 </settings>
 EOF
 
-            chmod +x mvnw
-            ./mvnw deploy -DskipTests
-            '''
-        }
-    }
-}
-        stage('Archive Artifacts') {
-            steps {
-                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+                    chmod +x mvnw
+                    ./mvnw deploy -DskipTests
+                    '''
+                }
             }
         }
     }
