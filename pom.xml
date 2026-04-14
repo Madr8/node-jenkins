@@ -47,10 +47,10 @@
     </plugins>
   </build>
 
-</project>
 <distributionManagement>
     <repository>
         <id>nexus</id>
         <url>http://host.docker.internal:8081/repository/Homework6/</http://localhost:8081/repository/Homework6/>
     </repository>
 </distributionManagement>
+</project>
