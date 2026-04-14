@@ -28,18 +28,28 @@ pipeline {
         }
 
         stage('Deploy to Nexus') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'nexus-creds', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
-                    sh '''
-                    chmod +x mvnw
-                    ./mvnw deploy -DskipTests \
-                      -Dnexus.username=$NEXUS_USER \
-                      -Dnexus.password=$NEXUS_PASS
-                    '''
-                }
-            }
-        }
+    steps {
+        withCredentials([usernamePassword(credentialsId: 'nexus-creds', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+            sh '''
+            mkdir -p ~/.m2
+            cat > ~/.m2/settings.xml <<EOF
+<settings>
+  <servers>
+    <server>
+      <id>nexus</id>
+      <username>${NEXUS_USER}</username>
+      <password>${NEXUS_PASS}</password>
+    </server>
+  </servers>
+</settings>
+EOF
 
+            chmod +x mvnw
+            ./mvnw deploy -DskipTests
+            '''
+        }
+    }
+}
         stage('Archive Artifacts') {
             steps {
                 archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
